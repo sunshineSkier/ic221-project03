@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
   // char response[BUF_SIZE];           //read in BUF_SIZE byte chunks
 
   char* hostname = argv[1]; //stores user input of the address we seek to lookup
-  char* path = argv[2]; //the path of the file we want most likely
+  char* path = argv[3]; //the path of the file we want most likely
   char request[1096]; //the base string that we will build the request off of, 1096 is arbitrary
   int msglen; //message length
   char response[4096]; //read in 4096 byte chunks
@@ -82,10 +82,10 @@ int main(int argc, char *argv[]) {
   }
 
   //retrieve the port if provided
-  if (argc == 3) {
-    port = atoi(argv[2]);
-    // printf("we have been given a path: %s\n", path);
-  }
+  // if (argc == 3) {
+  //   port = atoi(argv[2]);
+  //   // printf("we have been given a path: %s\n", path);
+  // }
 
   //retrieve the port if provided
   if (argc > 3) {
@@ -150,13 +150,28 @@ int main(int argc, char *argv[]) {
   printf("current addr has port %d\n", ntohs(addr.sin_port)); //network = the way things are stored in the struct and host is the way things are on my local machine
 
   //update the request string so that it has the proper formatting
-  strcpy(request, GET);
-  strcat(request, path);
-  strcat(request, END_GET);
-  strcat(request, HOST);
-  strcat(request, hostname);
-  strcat(request, END_HOST);
-  // printf("request now looks like:\n%s\n", request);
+  if(path == NULL){
+    printf("path is null!\n");
+    printf("argv[0]: %s\n", argv[0]);
+    // Read string from child, print it and close
+    // reading end.
+    int fd2[2];
+    char* concat_str;
+    read(fd2[0], concat_str, 100);
+    printf("Concatenated string %s\n", concat_str);
+    close(fd2[0]);
+  } else{
+    printf("path given. proceed with the code");
+    printf("path is: %s\n", path);
+    strcpy(request, GET);
+    strcat(request, path);
+    strcat(request, END_GET);
+    strcat(request, HOST);
+    strcat(request, hostname);
+    strcat(request, END_HOST);
+    printf("request now looks like:\n%s\n", request);
+  }
+
 
   //send the get request and host header for the path to the port socket we have established
   msglen = strlen(request); // we need to specify how many bytes to send

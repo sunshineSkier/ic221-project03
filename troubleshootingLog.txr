@@ -1,0 +1,7 @@
+troubleshooting log:
+1. not getting a correct request with command
+      ./nvycat courses.cs.usna.edu 80 /~bilzor/saturn.txt
+2. the path variable is reflecting the port, not the path
+3. how do I get what is being written to the pipe to save to a variable?
+    (aka I want the request that is being sent to the pipe to save to the
+      variable request so that I can plug that into my thing )
