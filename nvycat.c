@@ -1,5 +1,4 @@
-/* IC221 Fall 2019, Lab 12: Sockets
- * mywget.c: Program to perform an HTTP GET request and save contents to a file.
+/* IC221 Fall 2019, Project03
  * Chloe Bryan m210738
  */
 
@@ -16,14 +15,6 @@
 #include <netdb.h>
 
 #define BUF_SIZE 4096
-
-const char USAGE[]="mywget domain path [port]\n"
-  "\n"
-  "connect to the web server at domain and port, if provided, and request\n"
-  "the file at path. If the file exist, save the file based on the\n"
-  "filename of value in the path\n"
-  "\n"
-  "If domain is not reachable, report error\n";
 
 int main(int argc, char *argv[]) {
   short port=80;                 //the port we are connecting on
@@ -142,7 +133,8 @@ int main(int argc, char *argv[]) {
 
   //read the response, check the code (use strcmp on just the numeric part)
   if( (n = read(sock, response, BUF_SIZE)) > 0){
-    //print the response string or error to standard out
+    printf("response looks like: %s\n", response);
+    // //print the response string or error to standard out
     if(write(1, response, n) < 0){
       perror("write");
       exit(1);
