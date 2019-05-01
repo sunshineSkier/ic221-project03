@@ -9,12 +9,58 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <signal.h> //added for signal stuff
+#include <sys/signal.h> //addded for my signaling
+#include <pthread.h> //added for my threading
 
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
+//global variables I guess
 #define BUF_SIZE 4096
+int sock;                      //socket file descriptor
+char response[BUF_SIZE];
+int n;
+
+void exithandler(int signum){
+  //cleanup by closing files (sock is a file descriptor)
+  close(sock);
+
+  exit(1);
+}
+
+void * sock_to_term(void * args){
+  // printf("writing from sock to terminal\n");
+  if( (n = read(sock, response, BUF_SIZE)) > 0){ //reading from socket, writing to stdout
+    //print the response string or error to standard out
+    if(write(1, response, n) < 0){
+      perror("write");
+      exit(1);
+    }
+  }
+  //SPACESHIP IS GETTING HUNG UP HERE
+  printf("hang line 42\n");
+  printf("what is n? n = %d\n", n);
+
+
+  if (n<0){ perror("read error"); }
+  return NULL;
+}
+
+void * term_to_sock(void * args){
+  // printf("writing from terminal to socket\n");
+  if( (n = read(0, response, BUF_SIZE)) > 0){ //reading from socket, writing to stdout
+    //print the response string or error to standard out
+    if(write(sock, response, n) < 0){
+      perror("write");
+      exit(1);
+    }
+    // printf("hang line 54\n");
+  }
+  if (n<0){ perror("read error"); }
+  return NULL;
+}
 
 int main(int argc, char *argv[]) {
   short port=80;                 //the port we are connecting on
@@ -28,12 +74,9 @@ int main(int argc, char *argv[]) {
   int s;                       //for error checking
   int n;                       //for error checking
 
-  int sock;                      //socket file descriptor
 
   // char* hostname = argv[1]; //stores user input of the address we seek to lookup
-  char request[1096]; //the base string that we will build the request off of, 1096 is arbitrary
-  int msglen; //message length
-  char response[BUF_SIZE];
+  char request[1096] = {}; //the base string that we will build the request off of, 1096 is arbitrary
   // int server_sock, client_sock;        // Socket file descriptor
   int listen_option = 0;  //flag that lets us know if we are going to listen also, init to 0 bc FALSE
 
@@ -104,46 +147,38 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  //double checking everything
-  // printf("socket connected\n");
-  // printf("%s has address %s\n", hostname, inet_ntoa(saddr_in->sin_addr));
-  // printf("current addr has address %s\n", inet_ntoa(addr.sin_addr)); //these are printing out the same stuff and I'm not sure how addr got the ip address but okay cool
-  // printf("port we are using is called %d\n", port);
-  // printf("current addr has port %d\n", ntohs(addr.sin_port)); //network = the way things are stored in the struct and host is the way things are on my local machine
+  // //populate request from whatever is in stdin
+  // if((n = read(0, request, BUF_SIZE)) < 0){
+  //   perror("stdin error");
+  // }
 
-  //populate request from whatever is in stdin
-  if((n = read(0, request, BUF_SIZE)) < 0){
-    perror("stdin error");
-  }
-
-  printf("if there is no given stdin, the request looks like: %s", request);
-
-  // printf("checkpoint #1, stdin said: %s\n", request);
+  // printf("the request here says: %s\n", request);
 
   //send request from stdin
   if(write(sock, request,strlen(request)) < 0){
     perror("send");
   }
 
-  //send the get request and host header for the path to the port socket we have established
-  msglen = strlen(request); // we need to specify how many bytes to send
-  if (write(sock, request, msglen) != msglen) {
-    fprintf(stderr, "ERROR writing the message to the socket\n");
-  }
+  /*****************
+  threaded section
+  *****************/
+  signal(SIGINT, exithandler); //if the user presses ^C here I want to make sure everything gets closed out
+  while(1){
+    pthread_t sock_term, term_sock;
+    sleep(0.5);
 
-  //read the response, check the code (use strcmp on just the numeric part)
-  if( (n = read(sock, response, BUF_SIZE)) > 0){
-    printf("response looks like: %s\n", response);
-    // //print the response string or error to standard out
-    if(write(1, response, n) < 0){
-      perror("write");
-      exit(1);
-    }
+    //create a new thread have it run the function hello_fun
+    pthread_create(&sock_term, NULL, sock_to_term, NULL); //last NULL is for the arguments to the function hello_fun
+    pthread_create(&term_sock, NULL, term_to_sock, NULL); //last NULL is for the arguments to the function hello_fun
+    //wait until the thread completes
+    pthread_join(sock_term, NULL);
+    pthread_join(term_sock, NULL);
   }
-  if (n<0){ perror("read error"); }
-
-  //cleanup by closing files
-  close(sock);
+  /**********
+  one thread should read from the socket and write to the terminal (standard out),
+  other thread should read from the terminal (standard in) and write to the socket,
+  both doing this over and over again in a loop
+  ***********/
 
   return 0; //success
 }
