@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -lpthread -pthread
 SRC = $(wildcard *.c)
 BIN = $(SRC:.c=)
 

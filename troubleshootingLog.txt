@@ -1,0 +1,26 @@
+troubleshooting log:
+1. not getting a correct request with command
+      ./nvycat courses.cs.usna.edu 80 /~bilzor/saturn.txt
+2. the path variable is reflecting the port, not the path
+3. how do I get what is being written to the pipe to save to a variable?
+    (aka I want the request that is being sent to the pipe to save to the
+      variable request so that I can plug that into my thing )
+
+./nvycat courses.cs.usna.edu 80 /~bilzor/saturn.txt
+
+test:
+  nc localhost <port>
+  nc -l 7655
+  then send stuff between the two
+  your nvycat should work just like this
+  Test: ./nvycat mich356csd00u 5555
+
+read from file descriptor 0 (stdin)
+
+create multiple threads for handling the stuff later on where we read from
+  stdin and socket at the same time
+
+  printf "GET /~bilzor/ HTTP/1.1\r\nHost: courses.cs.usna.edu\r\n\r\n"
+| ./nvycat courses.cs.usna.edu 80
+
+for listening part see hello_server.c

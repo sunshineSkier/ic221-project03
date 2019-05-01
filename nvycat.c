@@ -39,11 +39,12 @@ int main(int argc, char *argv[]) {
 
   int sock;                      //socket file descriptor
 
-  char* hostname = argv[1]; //stores user input of the address we seek to lookup
+  // char* hostname = argv[1]; //stores user input of the address we seek to lookup
   char request[1096]; //the base string that we will build the request off of, 1096 is arbitrary
   int msglen; //message length
-  char response[4096]; //read in 4096 byte chunks
-  // char* edited_response;
+  char response[BUF_SIZE];
+  // int server_sock, client_sock;        // Socket file descriptor
+  int listen_option = 0;  //flag that lets us know if we are going to listen also, init to 0 bc FALSE
 
 
 
@@ -52,13 +53,24 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  // //case that we are given -l
+  // if(argc > 3 && (strcmp(argv[1],"-l") == 0)){
+  //   printf("-l option was given!\n");
+  //   listen_option = 1; //true
+  // } else {
+  //   printf("-l option was NOT given!\n");
+  // }
+
+
   //retrieve the port if provided
-  if (argc > 2) {
+  if (argc > 2 && (listen_option != 1)) {
     if ((port = atoi(argv[2])) == 0) {
       fprintf(stderr, "ERROR: invlaid port number\n");
       exit(1);
     }
   }
+
+
 
   // lookup domain to get socket address
   /**
@@ -102,20 +114,24 @@ int main(int argc, char *argv[]) {
   }
 
   //double checking everything
-  printf("socket connected\n");
-  printf("%s has address %s\n", hostname, inet_ntoa(saddr_in->sin_addr));
-  printf("current addr has address %s\n", inet_ntoa(addr.sin_addr)); //these are printing out the same stuff and I'm not sure how addr got the ip address but okay cool
-  printf("port we are using is called %d\n", port);
-  printf("current addr has port %d\n", ntohs(addr.sin_port)); //network = the way things are stored in the struct and host is the way things are on my local machine
+  // printf("socket connected\n");
+  // printf("%s has address %s\n", hostname, inet_ntoa(saddr_in->sin_addr));
+  // printf("current addr has address %s\n", inet_ntoa(addr.sin_addr)); //these are printing out the same stuff and I'm not sure how addr got the ip address but okay cool
+  // printf("port we are using is called %d\n", port);
+  // printf("current addr has port %d\n", ntohs(addr.sin_port)); //network = the way things are stored in the struct and host is the way things are on my local machine
 
-  //read from stdin
-  char c; //character being put in the socket
-  while((n = read(0, request, 4096)) > 0){
-    c = getc(0);  //get the character from stdin
-    printf("read character: %c\n", c);
-    if(c == '\n'){
-      write(1, request, n);  //write to standard out on the socket?
-    }
+  //populate request from whatever is in stdin
+  if((n = read(0, request, BUF_SIZE)) < 0){
+    perror("stdin error");
+  }
+
+  printf("if there is no given stdin, the request looks like: %s", request);
+
+  // printf("checkpoint #1, stdin said: %s\n", request);
+
+  //send request from stdin
+  if(write(sock, request,strlen(request)) < 0){
+    perror("send");
   }
 
   //send the get request and host header for the path to the port socket we have established
@@ -125,7 +141,7 @@ int main(int argc, char *argv[]) {
   }
 
   //read the response, check the code (use strcmp on just the numeric part)
-  while( (n = read(sock, response, 4096)) > 0){
+  if( (n = read(sock, response, BUF_SIZE)) > 0){
     //print the response string or error to standard out
     if(write(1, response, n) < 0){
       perror("write");
