@@ -38,9 +38,6 @@ int main(int argc, char *argv[]) {
   int n;                       //for error checking
 
   int sock;                      //socket file descriptor
-  // int fd;                        //output file
-
-  // char response[BUF_SIZE];           //read in BUF_SIZE byte chunks
 
   char* hostname = argv[1]; //stores user input of the address we seek to lookup
   char request[1096]; //the base string that we will build the request off of, 1096 is arbitrary
@@ -81,8 +78,6 @@ int main(int argc, char *argv[]) {
 
   //convert generic socket address to inet socket address
   saddr_in = (struct sockaddr_in *) result->ai_addr;
-  //add the port to the inet socket address, being sure to convert to network form
-  // saddr_in->sin_port = htons(port);
 
   //open and connect the socket
   sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -92,8 +87,6 @@ int main(int argc, char *argv[]) {
   }
 
   // socket is created, but not yet open
-  // printf("socket created\n");
-
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port); // port number, it can be anything you want
   /**
@@ -143,7 +136,6 @@ int main(int argc, char *argv[]) {
 
   //cleanup by closing files
   close(sock);
-  // printf("socket closed\n");
 
   return 0; //success
 }
