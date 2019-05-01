@@ -21,3 +21,5 @@ create multiple threads for handling the stuff later on where we read from
 
   printf "GET /~bilzor/ HTTP/1.1\r\nHost: courses.cs.usna.edu\r\n\r\n"
 | ./nvycat courses.cs.usna.edu 80
+
+tester tester 
