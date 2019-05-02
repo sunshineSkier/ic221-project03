@@ -32,25 +32,20 @@ void exithandler(int signum){
 
 void * sock_to_term(void * args){
   // printf("writing from sock to terminal\n");
-  if( (n = read(sock, response, BUF_SIZE)) > 0){ //reading from socket, writing to stdout
+  while( (n = read(sock, response, BUF_SIZE)) > 0){ //reading from socket, writing to stdout
     //print the response string or error to standard out
     if(write(1, response, n) < 0){
       perror("write");
       exit(1);
     }
   }
-  //SPACESHIP IS GETTING HUNG UP HERE
-  printf("hang line 42\n");
-  printf("what is n? n = %d\n", n);
-
-
   if (n<0){ perror("read error"); }
   return NULL;
 }
 
 void * term_to_sock(void * args){
   // printf("writing from terminal to socket\n");
-  if( (n = read(0, response, BUF_SIZE)) > 0){ //reading from socket, writing to stdout
+  while( (n = read(0, response, BUF_SIZE)) > 0){ //reading from socket, writing to stdout
     //print the response string or error to standard out
     if(write(sock, response, n) < 0){
       perror("write");
@@ -147,13 +142,6 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // //populate request from whatever is in stdin
-  // if((n = read(0, request, BUF_SIZE)) < 0){
-  //   perror("stdin error");
-  // }
-
-  // printf("the request here says: %s\n", request);
-
   //send request from stdin
   if(write(sock, request,strlen(request)) < 0){
     perror("send");
@@ -174,11 +162,6 @@ int main(int argc, char *argv[]) {
     pthread_join(sock_term, NULL);
     pthread_join(term_sock, NULL);
   }
-  /**********
-  one thread should read from the socket and write to the terminal (standard out),
-  other thread should read from the terminal (standard in) and write to the socket,
-  both doing this over and over again in a loop
-  ***********/
 
   return 0; //success
 }
